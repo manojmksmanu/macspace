@@ -31,16 +31,22 @@ class _TrashViewState extends State<TrashView> {
     }
   }
 
-  void _emptyTrash() {
-    final home = Platform.environment['HOME'] ?? '';
-    Process.run('rm', ['-rf', '$home/.Trash/*']);
-    setState(() => _trashItems.clear());
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('macOS Trash bin emptied!'),
-        backgroundColor: AppTheme.emeraldGreen,
-      ),
-    );
+  void _emptyTrash() async {
+    try {
+      await Process.run('osascript', ['-e', 'tell application "Finder" to empty trash without warnings']);
+    } catch (_) {
+      final home = Platform.environment['HOME'] ?? '';
+      await Process.run('rm', ['-rf', '$home/.Trash/*']);
+    }
+    await _load();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('macOS Trash bin emptied!'),
+          backgroundColor: AppTheme.emeraldGreen,
+        ),
+      );
+    }
   }
 
   @override

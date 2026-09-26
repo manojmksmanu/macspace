@@ -50,8 +50,8 @@ class ConfirmDeleteModal extends StatelessWidget {
       backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
-        width: 440,
-        padding: const EdgeInsets.all(24),
+        width: 520,
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           color: dialogBg,
           borderRadius: BorderRadius.circular(20),
@@ -161,7 +161,7 @@ class ConfirmDeleteModal extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
 
             // Action Buttons
             Row(
@@ -172,42 +172,43 @@ class ConfirmDeleteModal extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: textSecondary,
                     side: BorderSide(color: borderColor),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   child: const Text('Cancel'),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
                     onMoveToTrash();
                   },
-                  icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 15),
                   label: const Text('Move to Trash'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryBlue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
                     onConfirmPermanentDelete();
                   },
-                  icon: const Icon(Icons.delete_forever_rounded, size: 16),
-                  label: const Text('Permanent Delete'),
+                  icon: const Icon(Icons.delete_forever_rounded, size: 15),
+                  label: const Text('Delete Permanently'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.coralRose,
                     foregroundColor: Colors.white,
-                    elevation: 4,
+                    elevation: 2,
                     shadowColor: AppTheme.coralRose.withValues(alpha: 0.4),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                   ),
                 ),
               ],

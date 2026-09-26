@@ -16,12 +16,37 @@ class AppTheme {
   static const Color cardBg = Color(0xFF1E293B);
   static const Color cardBgTranslucent = Color(0xCC1E293B);
 
-  // Light Studio Palette
-  static const Color bgLight = Color(0xFFF1F5F9);
-  static const Color bgCanvasLight = Color(0xFFF8FAFC);
+  // Light Studio Palette (Matching modern screenshot design)
+  static const Color bgLight = Color(0xFFF4F7FE);
+  static const Color bgCanvasLight = Color(0xFFF4F7FE);
   static const Color sidebarBgLight = Color(0xFFFFFFFF);
   static const Color cardBgLight = Color(0xFFFFFFFF);
-  static const Color cardBgTranslucentLight = Color(0xEEFFFFFF);
+  static const Color cardBgTranslucentLight = Color(0xFFFFFFFF);
+
+  // Gradient Presets matching screenshot cards
+  static const LinearGradient cardGradientBlue = LinearGradient(
+    colors: [Color(0xFF38BDF8), Color(0xFF2563EB)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient cardGradientEmerald = LinearGradient(
+    colors: [Color(0xFF34D399), Color(0xFF059669)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient cardGradientPurple = LinearGradient(
+    colors: [Color(0xFFA78BFA), Color(0xFF7C3AED)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient cardGradientRoyal = LinearGradient(
+    colors: [Color(0xFF60A5FA), Color(0xFF1D4ED8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // Accents (constant across themes)
   static const Color primaryBlue = Color(0xFF3B82F6);
@@ -33,15 +58,25 @@ class AppTheme {
 
   // Text colors
   static const Color textWhite = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF0F172A);
+  static const Color textDark = Color(0xFF1E293B);
   static const Color textMuted = Color(0xFF94A3B8);
-  static const Color textMutedLight = Color(0xFF475569);
-  static const Color textSubtle = Color(0xFF64748B);
+  static const Color textMutedLight = Color(0xFF64748B);
+  static const Color textSubtle = Color(0xFF94A3B8);
 
   // Border & Dividers
   static const Color borderColor = Color(0xFF334155);
   static const Color borderColorLight = Color(0xFFE2E8F0);
   static const Color borderLight = Color(0x33F8FAFC);
+
+  static List<BoxShadow> softShadow(bool isDark) {
+    return [
+      BoxShadow(
+        color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFF94A3B8).withValues(alpha: 0.08),
+        blurRadius: 20,
+        offset: const Offset(0, 6),
+      ),
+    ];
+  }
 
   static ThemeData get darkStudioTheme {
     return ThemeData(

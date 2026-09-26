@@ -390,7 +390,25 @@ class SystemStorageService {
       ),
     ];
 
-    double reclaimable = categories.fold<double>(0, (sum, c) => sum + c.sizeGB);
+    double scannedCategoriesSum = categories.fold<double>(0, (sum, c) => sum + c.sizeGB);
+    double systemOSDataGB = (usedGB - scannedCategoriesSum).clamp(0.0, usedGB);
+    if (systemOSDataGB > 1.0) {
+      categories.insert(
+        0,
+        CategoryCardInfo(
+          key: 'macos_system',
+          title: 'macOS System Data',
+          subtitle: 'System Volume, OS Files & Libraries',
+          sizeGB: double.parse(systemOSDataGB.toStringAsFixed(1)),
+          itemCount: 154000,
+          icon: Icons.apple_rounded,
+          color: const Color(0xFF64748B),
+          items: _fallbackItems('macos_system', '/System/Volumes/Data', 'macOS System Volume Data', systemOSDataGB * 1024),
+        ),
+      );
+    }
+
+    double reclaimable = categories.where((c) => ['dev', 'caches', 'trash', 'duplicates', 'installers'].contains(c.key)).fold<double>(0, (sum, c) => sum + c.sizeGB);
 
     final rootTreemap = TreemapNode(
       name: "Macintosh HD",
@@ -650,64 +668,102 @@ class SystemStorageService {
     final dir = Directory('$home/Downloads');
     if (dir.existsSync()) {
       try {
-        final list = dir.listSync().whereType<File>().toList();
-        for (final f in list.take(15)) {
-          final name = f.path.split('/').last;
-          if (name.startsWith('.')) continue;
-          final stat = f.statSync();
-          final sizeMB = stat.size / (1000 * 1000);
-          final sizeGB = sizeMB / 1000;
+        final list = dir.listSync();
+        for (final entity in list) {
+          final name = entity.path.split('/').last;
+          if (name.startsWith('.') || name == '.DS_Store' || name == '.localized') continue;
+
+          double sizeMB = 0.1;
+          bool isDir = entity is Directory;
+
+          try {
+            if (isDir) {
+              final du = await Process.run('du', ['-sk', entity.path]);
+              if (du.exitCode == 0) {
+                final kb = double.tryParse(du.stdout.toString().trim().split(RegExp(r'\s+')).first) ?? 0;
+                sizeMB = kb / 1024.0;
+              }
+            } else {
+              sizeMB = File(entity.path).lengthSync() / (1024 * 1024);
+            }
+          } catch (_) {}
+
+          final sizeGB = sizeMB / 1024.0;
+
           files.add(StorageFile(
             name: name,
-            path: "~/Downloads",
-            sizeGB: double.parse(sizeGB > 0.01 ? sizeGB.toStringAsFixed(2) : (sizeMB / 1000).toStringAsFixed(3)),
-            icon: _getIconForFile(name),
-            iconColor: _getColorForFile(name),
-            type: _getTypeForFile(name),
+            path: "~/Downloads/$name",
+            sizeGB: double.parse(sizeGB > 0.001 ? sizeGB.toStringAsFixed(3) : (sizeMB / 1024).toStringAsFixed(4)),
+            icon: isDir ? Icons.folder_rounded : _getIconForFile(name),
+            iconColor: isDir ? const Color(0xFFF59E0B) : _getColorForFile(name),
+            type: isDir ? "Downloaded Folder" : _getTypeForFile(name),
           ));
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint("Error fetching downloads: $e");
+      }
     }
+
+    files.sort((a, b) => b.sizeGB.compareTo(a.sizeGB));
     return files;
   }
 
   static Future<List<StorageFile>> fetchRealTrashFiles() async {
     final List<StorageFile> trash = [];
     final home = Platform.environment['HOME'] ?? '';
-    final dir = Directory('$home/.Trash');
-    if (dir.existsSync()) {
-      try {
-        final list = dir.listSync();
-        for (final entity in list) {
-          final name = entity.path.split('/').last;
-          if (name == '.DS_Store' || name == '.localized') continue;
-          
-          double sizeMB = 0.1;
-          try {
-            final du = await Process.run('du', ['-sk', entity.path]);
-            if (du.exitCode == 0) {
-              final kb = double.tryParse(du.stdout.toString().trim().split(RegExp(r'\s+')).first) ?? 0;
-              sizeMB = kb / 1024.0;
-            }
-          } catch (_) {
-            sizeMB = entity.statSync().size / (1024 * 1024);
+
+    try {
+      final res = await Process.run('osascript', [
+        '-e',
+        'tell application "Finder" to get name of every item of trash',
+      ]);
+
+      if (res.exitCode == 0) {
+        final raw = res.stdout.toString().trim();
+        if (raw.isNotEmpty) {
+          final itemNames = raw.split(', ');
+          for (final rawName in itemNames) {
+            final name = rawName.trim();
+            if (name.isEmpty || name == '.DS_Store' || name == '.localized') continue;
+
+            final fullPath = '$home/.Trash/$name';
+            double sizeMB = 1.0;
+
+            // Attempt to get file size via File/Directory stat or du
+            try {
+              final file = File(fullPath);
+              if (file.existsSync()) {
+                sizeMB = file.lengthSync() / (1024 * 1024);
+              } else {
+                final dir = Directory(fullPath);
+                if (dir.existsSync()) {
+                  final du = await Process.run('du', ['-sk', fullPath]);
+                  if (du.exitCode == 0) {
+                    final kb = double.tryParse(du.stdout.toString().trim().split(RegExp(r'\s+')).first) ?? 0;
+                    sizeMB = kb / 1024.0;
+                  }
+                }
+              }
+            } catch (_) {}
+
+            final sizeGB = sizeMB / 1024.0;
+            final isFolder = name == 'node_modules' || !name.contains('.') || name.startsWith('node_modules');
+
+            trash.add(StorageFile(
+              name: name,
+              path: fullPath,
+              sizeGB: double.parse(sizeGB > 0.001 ? sizeGB.toStringAsFixed(3) : (sizeMB / 1024).toStringAsFixed(4)),
+              icon: isFolder ? Icons.folder_rounded : Icons.delete_outline_rounded,
+              iconColor: const Color(0xFFEF4444),
+              type: isFolder ? "Trash Directory" : "Trash File",
+            ));
           }
-
-          final sizeGB = sizeMB / 1024.0;
-
-          trash.add(StorageFile(
-            name: name,
-            path: entity.path,
-            sizeGB: double.parse(sizeGB > 0.001 ? sizeGB.toStringAsFixed(3) : (sizeMB / 1024).toStringAsFixed(4)),
-            icon: entity is Directory ? Icons.folder_rounded : Icons.delete_outline_rounded,
-            iconColor: const Color(0xFFEF4444),
-            type: entity is Directory ? "Trash Directory" : "Trash File",
-          ));
         }
-      } catch (e) {
-        debugPrint("Error reading trash: $e");
       }
+    } catch (e) {
+      debugPrint("Error fetching trash via osascript: $e");
     }
+
     return trash;
   }
 

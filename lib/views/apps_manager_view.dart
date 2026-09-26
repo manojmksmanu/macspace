@@ -41,6 +41,32 @@ class _AppsManagerViewState extends State<AppsManagerView> {
     );
   }
 
+  IconData _getAppIcon(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('xcode')) return Icons.code_rounded;
+    if (n.contains('chrome') || n.contains('safari') || n.contains('firefox') || n.contains('browser')) return Icons.language_rounded;
+    if (n.contains('code') || n.contains('studio') || n.contains('sublime') || n.contains('intellij')) return Icons.terminal_rounded;
+    if (n.contains('slack') || n.contains('discord') || n.contains('telegram') || n.contains('whatsapp')) return Icons.chat_bubble_rounded;
+    if (n.contains('spotify') || n.contains('music') || n.contains('logic')) return Icons.music_note_rounded;
+    if (n.contains('photo') || n.contains('figma') || n.contains('design') || n.contains('cut')) return Icons.palette_rounded;
+    if (n.contains('docker')) return Icons.directions_boat_rounded;
+    if (n.contains('terminal') || n.contains('iterm')) return Icons.developer_board_rounded;
+    if (n.contains('mail')) return Icons.email_rounded;
+    if (n.contains('simulator')) return Icons.smartphone_rounded;
+    if (n.contains('clean') || n.contains('purge') || n.contains('keeper')) return Icons.auto_awesome_rounded;
+    return Icons.window_rounded;
+  }
+
+  Color _getAppIconColor(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('xcode') || n.contains('chrome') || n.contains('safari')) return AppTheme.primaryBlue;
+    if (n.contains('code') || n.contains('studio') || n.contains('discord')) return AppTheme.purpleGlow;
+    if (n.contains('spotify') || n.contains('whatsapp') || n.contains('slack')) return AppTheme.emeraldGreen;
+    if (n.contains('docker') || n.contains('figma') || n.contains('photo')) return AppTheme.cyanGlow;
+    if (n.contains('cut') || n.contains('music') || n.contains('mail')) return AppTheme.coralRose;
+    return AppTheme.amberGold;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -123,10 +149,18 @@ class _AppsManagerViewState extends State<AppsManagerView> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryBlue.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(10),
+                            gradient: LinearGradient(
+                              colors: [
+                                _getAppIconColor(app.name).withValues(alpha: 0.25),
+                                _getAppIconColor(app.name).withValues(alpha: 0.12),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _getAppIconColor(app.name).withValues(alpha: 0.3)),
                           ),
-                          child: const Icon(Icons.apps_rounded, color: AppTheme.cyanGlow, size: 22),
+                          child: Icon(_getAppIcon(app.name), color: _getAppIconColor(app.name), size: 22),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
