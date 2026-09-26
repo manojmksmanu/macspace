@@ -18,11 +18,18 @@ class MacStorageAnalyzerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mac Storage Analyzer Pro',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkStudioTheme,
-      home: const MainLayout(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppTheme.themeModeNotifier,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          title: 'Mac Storage Analyzer Pro',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightStudioTheme,
+          darkTheme: AppTheme.darkStudioTheme,
+          themeMode: mode,
+          home: const MainLayout(),
+        );
+      },
     );
   }
 }
@@ -40,9 +47,9 @@ class _MainLayoutState extends State<MainLayout> {
   Widget _buildCurrentView() {
     switch (_selectedIndex) {
       case 0:
-        return const ChexyDashboardView(); // PAGE 1: Chexy Dashboard (Screenshot 1)
+        return const ChexyDashboardView(); // PAGE 1: Chexy Dashboard
       case 1:
-        return const DissectExplorerView(); // PAGE 2: DissectMac Treemap (Screenshot 2)
+        return const DissectExplorerView(); // PAGE 2: DissectMac Treemap Explorer
       case 2:
         return const GenericListView(
           title: 'Largest Files Inspector',
@@ -82,8 +89,13 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppTheme.bgDark : AppTheme.bgLight;
+    final canvasColor = isDark ? AppTheme.bgCanvas : AppTheme.bgCanvasLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: bgColor,
       body: Row(
         children: [
           // Left Sidebar Navigation
@@ -97,13 +109,30 @@ class _MainLayoutState extends State<MainLayout> {
           ),
           Container(
             width: 1,
-            color: AppTheme.borderColor,
+            color: borderColor,
           ),
           // Main Body Content
           Expanded(
             child: Container(
-              color: AppTheme.bgCanvas,
-              child: _buildCurrentView(),
+              color: canvasColor,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.98, end: 1.0).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey<int>(_selectedIndex),
+                  child: _buildCurrentView(),
+                ),
+              ),
             ),
           ),
         ],

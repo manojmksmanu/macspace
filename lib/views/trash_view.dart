@@ -45,6 +45,13 @@ class _TrashViewState extends State<TrashView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? AppTheme.cardBgTranslucent : AppTheme.cardBgLight;
+    final innerCardBg = isDark ? AppTheme.bgDark.withValues(alpha: 0.5) : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
     }
@@ -59,21 +66,21 @@ class _TrashViewState extends State<TrashView> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'macOS Trash Bin Purger',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textWhite,
+                      color: textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Real deleted items inside ~/.Trash',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSubtle,
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -95,25 +102,25 @@ class _TrashViewState extends State<TrashView> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.cardBgTranslucent,
+                color: cardBgColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: borderColor),
               ),
               child: _trashItems.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 48),
-                          SizedBox(height: 12),
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 48),
+                          const SizedBox(height: 12),
                           Text(
                             'Trash Bin is Empty!',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textWhite),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: textPrimary),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             'No deleted files currently accumulating space in ~/.Trash',
-                            style: TextStyle(fontSize: 12, color: AppTheme.textSubtle),
+                            style: TextStyle(fontSize: 12, color: textSecondary),
                           ),
                         ],
                       ),
@@ -126,16 +133,16 @@ class _TrashViewState extends State<TrashView> {
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.bgDark.withOpacity(0.5),
+                            color: innerCardBg,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.borderColor.withOpacity(0.5)),
+                            border: Border.all(color: borderColor.withValues(alpha: 0.5)),
                           ),
                           child: Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.coralRose.withOpacity(0.18),
+                                  color: AppTheme.coralRose.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(Icons.delete_outline_rounded, color: AppTheme.coralRose, size: 20),
@@ -147,15 +154,15 @@ class _TrashViewState extends State<TrashView> {
                                   children: [
                                     Text(
                                       item.name,
-                                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppTheme.textWhite),
+                                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: textPrimary),
                                     ),
-                                    Text(item.path, style: const TextStyle(fontSize: 11, color: AppTheme.textSubtle)),
+                                    Text(item.path, style: TextStyle(fontSize: 11, color: textSecondary)),
                                   ],
                                 ),
                               ),
                               Text(
                                 '${item.sizeGB} GB',
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textWhite),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textPrimary),
                               ),
                             ],
                           ),

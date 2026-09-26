@@ -39,14 +39,21 @@ class ConfirmDeleteModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? AppTheme.cardBg : AppTheme.cardBgLight;
+    final itemBg = isDark ? AppTheme.bgDark : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
+
     return Dialog(
-      backgroundColor: AppTheme.cardBg,
+      backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         width: 440,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppTheme.cardBg,
+          color: dialogBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppTheme.coralRose.withValues(alpha: 0.4)),
         ),
@@ -72,17 +79,17 @@ class ConfirmDeleteModal extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Permanent Delete Warning',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textWhite,
+                          color: textPrimary,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
+                      const SizedBox(height: 2),
+                      const Text(
                         'This action cannot be undone!',
                         style: TextStyle(
                           fontSize: 12,
@@ -96,11 +103,11 @@ class ConfirmDeleteModal extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
-            const Text(
+            Text(
               'Are you sure you want to permanently delete this file from your Mac? It will be erased completely without moving to Trash.',
               style: TextStyle(
                 fontSize: 13,
-                color: AppTheme.textMuted,
+                color: textSecondary,
                 height: 1.4,
               ),
             ),
@@ -110,13 +117,13 @@ class ConfirmDeleteModal extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.bgDark,
+                color: itemBg,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: borderColor),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.insert_drive_file_outlined, color: AppTheme.textMuted, size: 20),
+                  Icon(Icons.insert_drive_file_outlined, color: textSecondary, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -124,18 +131,18 @@ class ConfirmDeleteModal extends StatelessWidget {
                       children: [
                         Text(
                           itemName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textWhite,
+                            color: textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           itemPath,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textSubtle,
+                            color: textSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -145,10 +152,10 @@ class ConfirmDeleteModal extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     itemSize,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textWhite,
+                      color: textPrimary,
                     ),
                   ),
                 ],
@@ -163,8 +170,8 @@ class ConfirmDeleteModal extends StatelessWidget {
                 OutlinedButton(
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.textSubtle,
-                    side: const BorderSide(color: AppTheme.borderColor),
+                    foregroundColor: textSecondary,
+                    side: BorderSide(color: borderColor),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),

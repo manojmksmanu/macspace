@@ -56,7 +56,7 @@ class CategoryCardsGrid extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(5),
                                   decoration: BoxDecoration(
-                                    color: cat.color.withOpacity(0.18),
+                                    color: cat.color.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Icon(cat.icon, color: cat.color, size: 14),
@@ -99,7 +99,7 @@ class CategoryCardsGrid extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: (cat.percentage / 100).clamp(0.02, 1.0),
                           minHeight: 4,
-                          backgroundColor: AppTheme.borderColor.withOpacity(0.4),
+                          backgroundColor: AppTheme.borderColor.withValues(alpha: 0.4),
                           valueColor: AlwaysStoppedAnimation<Color>(cat.color),
                         ),
                       ),

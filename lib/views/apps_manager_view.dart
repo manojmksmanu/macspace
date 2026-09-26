@@ -43,6 +43,13 @@ class _AppsManagerViewState extends State<AppsManagerView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? AppTheme.cardBgTranslucent : AppTheme.cardBgLight;
+    final innerCardBg = isDark ? AppTheme.bgDark.withValues(alpha: 0.5) : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
     }
@@ -61,20 +68,20 @@ class _AppsManagerViewState extends State<AppsManagerView> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Applications Manager',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textWhite,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Real installed macOS applications in /Applications • Total: $totalGB GB',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSubtle,
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -95,9 +102,9 @@ class _AppsManagerViewState extends State<AppsManagerView> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.cardBgTranslucent,
+                color: cardBgColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: borderColor),
               ),
               child: ListView.builder(
                 itemCount: _apps.length,
@@ -107,9 +114,9 @@ class _AppsManagerViewState extends State<AppsManagerView> {
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.bgDark.withValues(alpha: 0.5),
+                      color: innerCardBg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.5)),
+                      border: Border.all(color: borderColor.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -128,25 +135,25 @@ class _AppsManagerViewState extends State<AppsManagerView> {
                             children: [
                               Text(
                                 app.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textWhite,
+                                  color: textPrimary,
                                 ),
                               ),
                               Text(
                                 app.path,
-                                style: const TextStyle(fontSize: 11, color: AppTheme.textSubtle),
+                                style: TextStyle(fontSize: 11, color: textSecondary),
                               ),
                             ],
                           ),
                         ),
                         Text(
                           app.sizeFormatted,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textWhite,
+                            color: textPrimary,
                           ),
                         ),
                         const SizedBox(width: 14),

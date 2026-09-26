@@ -64,18 +64,24 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
   @override
   Widget build(BuildContext context) {
     final cat = widget.categoryInfo;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? AppTheme.cardBg : AppTheme.cardBgLight;
+    final itemBg = isDark ? AppTheme.bgDark.withValues(alpha: 0.5) : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
 
     return Dialog(
-      backgroundColor: AppTheme.cardBg,
+      backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         width: 720,
         height: 580,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppTheme.cardBg,
+          color: dialogBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: cat.color.withOpacity(0.4)),
+          border: Border.all(color: cat.color.withValues(alpha: 0.4)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +95,7 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: cat.color.withOpacity(0.18),
+                        color: cat.color.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(cat.icon, color: cat.color, size: 24),
@@ -100,17 +106,17 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                       children: [
                         Text(
                           'Category Inspector: ${cat.title}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textWhite,
+                            color: textPrimary,
                           ),
                         ),
                         Text(
                           '${cat.subtitle} • Total: ${cat.sizeGB} GB',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textSubtle,
+                            color: textSecondary,
                           ),
                         ),
                       ],
@@ -118,7 +124,7 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textMuted),
+                  icon: Icon(Icons.close_rounded, color: textSecondary),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -131,12 +137,12 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 44),
-                          SizedBox(height: 12),
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 44),
+                          const SizedBox(height: 12),
                           Text(
                             'No Files in Category',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textWhite),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary),
                           ),
                         ],
                       ),
@@ -149,16 +155,16 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.bgDark.withOpacity(0.5),
+                            color: itemBg,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.borderColor.withOpacity(0.5)),
+                            border: Border.all(color: borderColor.withValues(alpha: 0.5)),
                           ),
                           child: Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: cat.color.withOpacity(0.15),
+                                  color: cat.color.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(cat.icon, color: cat.color, size: 18),
@@ -170,18 +176,18 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                                   children: [
                                     Text(
                                       item.name,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: AppTheme.textWhite,
+                                        color: textPrimary,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
                                       item.path,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10.5,
-                                        color: AppTheme.textSubtle,
+                                        color: textSecondary,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -191,10 +197,10 @@ class _CategoryInspectorModalState extends State<CategoryInspectorModal> {
                               const SizedBox(width: 10),
                               Text(
                                 item.sizeFormatted,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w800,
-                                  color: AppTheme.textWhite,
+                                  color: textPrimary,
                                 ),
                               ),
                               const SizedBox(width: 12),

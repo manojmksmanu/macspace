@@ -120,16 +120,16 @@ class _LargeFilesTableState extends State<LargeFilesTable> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppTheme.bgDark.withOpacity(0.4),
+          color: AppTheme.bgDark.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.borderColor.withOpacity(0.4)),
+          border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withOpacity(0.15),
+                color: AppTheme.primaryBlue.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.folder_rounded, color: AppTheme.primaryBlue, size: 18),
@@ -172,16 +172,16 @@ class _LargeFilesTableState extends State<LargeFilesTable> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppTheme.bgDark.withOpacity(0.4),
+          color: AppTheme.bgDark.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.borderColor.withOpacity(0.4)),
+          border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: file.iconColor.withOpacity(0.15),
+                color: file.iconColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(file.icon, color: file.iconColor, size: 18),

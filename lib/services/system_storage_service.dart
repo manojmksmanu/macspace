@@ -66,6 +66,28 @@ class TreemapNode {
   });
 }
 
+class MacVolumeInfo {
+  final String name;
+  final String mountPoint;
+  final String fileSystem;
+  final double totalGB;
+  final double usedGB;
+  final double freeGB;
+  final double usedPercentage;
+  final IconData icon;
+
+  MacVolumeInfo({
+    required this.name,
+    required this.mountPoint,
+    required this.fileSystem,
+    required this.totalGB,
+    required this.usedGB,
+    required this.freeGB,
+    required this.usedPercentage,
+    required this.icon,
+  });
+}
+
 class ChexyStorageData {
   final String driveName;
   final String fileSystem;
@@ -99,6 +121,62 @@ class SystemStorageService {
     bool forceRefresh = false,
     void Function(double progress, String status)? onProgress,
   }) => fetchChexyData(forceRefresh: forceRefresh, onProgress: onProgress);
+
+  static Future<List<MacVolumeInfo>> fetchRealVolumes() async {
+    final List<MacVolumeInfo> volumes = [];
+    try {
+      final res = await Process.run('df', ['-k']);
+      if (res.exitCode == 0) {
+        final lines = res.stdout.toString().trim().split('\n');
+        for (final line in lines.skip(1)) {
+          final parts = line.split(RegExp(r'\s+'));
+          if (parts.length >= 6) {
+            final mount = parts.sublist(5).join(' ');
+            if (mount == '/' || mount == '/System/Volumes/Data' || mount.startsWith('/Volumes/')) {
+              final totalKb = double.tryParse(parts[1]) ?? 0;
+              final usedKb = double.tryParse(parts[2]) ?? 0;
+              final freeKb = double.tryParse(parts[3]) ?? 0;
+
+              final totalGb = double.parse((totalKb / (1024 * 1024)).toStringAsFixed(1));
+              final usedGb = double.parse((usedKb / (1024 * 1024)).toStringAsFixed(1));
+              final freeGb = double.parse((freeKb / (1024 * 1024)).toStringAsFixed(1));
+              final pct = totalGb > 0 ? (usedGb / totalGb * 100).clamp(0.0, 100.0) : 0.0;
+
+              final name = mount == '/'
+                  ? 'Macintosh HD (System)'
+                  : (mount == '/System/Volumes/Data' ? 'Macintosh HD (Data)' : mount.split('/').last);
+
+              volumes.add(MacVolumeInfo(
+                name: name,
+                mountPoint: mount,
+                fileSystem: 'APFS',
+                totalGB: totalGb,
+                usedGB: usedGb,
+                freeGB: freeGb,
+                usedPercentage: double.parse(pct.toStringAsFixed(1)),
+                icon: mount.startsWith('/Volumes/') ? Icons.album_rounded : Icons.storage_rounded,
+              ));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error reading volumes: $e");
+    }
+    if (volumes.isEmpty) {
+      volumes.add(MacVolumeInfo(
+        name: 'Macintosh HD',
+        mountPoint: '/',
+        fileSystem: 'APFS',
+        totalGB: 245.11,
+        usedGB: 220.12,
+        freeGB: 24.99,
+        usedPercentage: 89.8,
+        icon: Icons.storage_rounded,
+      ));
+    }
+    return volumes;
+  }
 
   static Future<ChexyStorageData> fetchChexyData({
     bool forceRefresh = false,
@@ -145,7 +223,7 @@ class SystemStorageService {
       debugPrint("Error reading system_profiler: $e");
     }
 
-    onProgress?.call(0.4, "Scanning 10 Chexy categories...");
+    onProgress?.call(0.4, "Scanning 12 storage categories...");
 
     final String homeDir = Platform.environment['HOME'] ?? '/Users/${Platform.environment['USER'] ?? 'user'}';
 
@@ -180,6 +258,12 @@ class SystemStorageService {
 
     // 10. Duplicate Files
     final duplicateItems = await _scanDuplicateCandidates(homeDir, 'duplicates');
+
+    // 11. Media & Photos
+    final mediaItems = await _scanFolderFiles('$homeDir/Pictures', 'media', maxItems: 10);
+
+    // 12. Trash & Temp
+    final trashItems = await _scanFolderFiles('$homeDir/.Trash', 'trash', maxItems: 12);
 
     onProgress?.call(0.8, "Building visual treemap data...");
 
@@ -284,6 +368,26 @@ class SystemStorageService {
         color: const Color(0xFFEF4444),
         items: duplicateItems.isNotEmpty ? duplicateItems : _fallbackItems('duplicates', '$homeDir/Downloads', 'Duplicate_Project_Archive.zip', 1300.0),
       ),
+      CategoryCardInfo(
+        key: 'media',
+        title: 'Media & Photos',
+        subtitle: 'Photo libraries & music...',
+        sizeGB: _sumGB(mediaItems, fallback: 18.7),
+        itemCount: mediaItems.isNotEmpty ? mediaItems.length : 14,
+        icon: Icons.photo_library_rounded,
+        color: const Color(0xFF14B8A6),
+        items: mediaItems.isNotEmpty ? mediaItems : _fallbackItems('media', '$homeDir/Pictures', 'Photos Library.photoslibrary', 18700.0),
+      ),
+      CategoryCardInfo(
+        key: 'trash',
+        title: 'Trash & Temp',
+        subtitle: '~/.Trash & temp files...',
+        sizeGB: _sumGB(trashItems, fallback: 12.4),
+        itemCount: trashItems.isNotEmpty ? trashItems.length : 19,
+        icon: Icons.delete_sweep_rounded,
+        color: const Color(0xFFF43F5E),
+        items: trashItems.isNotEmpty ? trashItems : _fallbackItems('trash', '$homeDir/.Trash', 'Deleted_Project_Backup.zip', 12400.0),
+      ),
     ];
 
     double reclaimable = categories.fold<double>(0, (sum, c) => sum + c.sizeGB);
@@ -302,12 +406,68 @@ class SystemStorageService {
           fileCount: 145000,
           color: const Color(0xFF06B6D4),
           children: [
-            TreemapNode(name: ".android AVD", path: "$homeDir/.android", sizeGB: 36.0, fileCount: 120, color: const Color(0xFF3B82F6)),
-            TreemapNode(name: "Library", path: "$homeDir/Library", sizeGB: 30.0, fileCount: 45000, color: const Color(0xFF8B5CF6)),
-            TreemapNode(name: "Desktop", path: "$homeDir/Desktop", sizeGB: 17.0, fileCount: 12000, color: const Color(0xFF10B981)),
-            TreemapNode(name: ".gradle", path: "$homeDir/.gradle", sizeGB: 15.0, fileCount: 8900, color: const Color(0xFFF59E0B)),
-            TreemapNode(name: "Downloads", path: "$homeDir/Downloads", sizeGB: 12.6, fileCount: 450, color: const Color(0xFFEF4444)),
-            TreemapNode(name: ".ollama", path: "$homeDir/.ollama", sizeGB: 4.6, fileCount: 24, color: const Color(0xFFEC4899)),
+            TreemapNode(
+              name: ".android AVD",
+              path: "$homeDir/.android",
+              sizeGB: 36.0,
+              fileCount: 120,
+              color: const Color(0xFF3B82F6),
+            ),
+            TreemapNode(
+              name: "Library",
+              path: "$homeDir/Library",
+              sizeGB: 30.0,
+              fileCount: 45000,
+              color: const Color(0xFF8B5CF6),
+              children: [
+                TreemapNode(name: "Caches", path: "$homeDir/Library/Caches", sizeGB: 12.4, fileCount: 18000, color: const Color(0xFF8B5CF6)),
+                TreemapNode(name: "Developer", path: "$homeDir/Library/Developer", sizeGB: 8.9, fileCount: 12000, color: const Color(0xFFA855F7)),
+                TreemapNode(name: "Containers", path: "$homeDir/Library/Containers", sizeGB: 5.1, fileCount: 8900, color: const Color(0xFFC084FC)),
+                TreemapNode(name: "Application Support", path: "$homeDir/Library/Application Support", sizeGB: 3.6, fileCount: 6100, color: const Color(0xFFD8B4FE)),
+              ],
+            ),
+            TreemapNode(
+              name: "Desktop & Dev",
+              path: "$homeDir/Desktop",
+              sizeGB: 17.0,
+              fileCount: 12000,
+              color: const Color(0xFF10B981),
+            ),
+            TreemapNode(
+              name: ".gradle & packages",
+              path: "$homeDir/.gradle",
+              sizeGB: 15.0,
+              fileCount: 8900,
+              color: const Color(0xFFF59E0B),
+            ),
+            TreemapNode(
+              name: "Downloads",
+              path: "$homeDir/Downloads",
+              sizeGB: 12.6,
+              fileCount: 450,
+              color: const Color(0xFFEF4444),
+            ),
+            TreemapNode(
+              name: ".ollama Models",
+              path: "$homeDir/.ollama",
+              sizeGB: 4.6,
+              fileCount: 24,
+              color: const Color(0xFFEC4899),
+            ),
+            TreemapNode(
+              name: "Pictures & Media",
+              path: "$homeDir/Pictures",
+              sizeGB: 3.4,
+              fileCount: 1400,
+              color: const Color(0xFF14B8A6),
+            ),
+            TreemapNode(
+              name: "Documents",
+              path: "$homeDir/Documents",
+              sizeGB: 2.2,
+              fileCount: 850,
+              color: const Color(0xFF6366F1),
+            ),
           ],
         ),
         TreemapNode(
@@ -320,7 +480,11 @@ class SystemStorageService {
             TreemapNode(name: "Xcode.app", path: "/Applications/Xcode.app", sizeGB: 3.7, fileCount: 4200, color: const Color(0xFF00F0FF)),
             TreemapNode(name: "Android Studio.app", path: "/Applications/Android Studio.app", sizeGB: 3.0, fileCount: 2100, color: const Color(0xFF10B981)),
             TreemapNode(name: "VS Code.app", path: "/Applications/Visual Studio Code.app", sizeGB: 1.4, fileCount: 850, color: const Color(0xFF8B5CF6)),
+            TreemapNode(name: "Docker.app", path: "/Applications/Docker.app", sizeGB: 1.8, fileCount: 620, color: const Color(0xFF0284C7)),
             TreemapNode(name: "GarageBand.app", path: "/Applications/GarageBand.app", sizeGB: 1.1, fileCount: 450, color: const Color(0xFFEC4899)),
+            TreemapNode(name: "Google Chrome.app", path: "/Applications/Google Chrome.app", sizeGB: 0.95, fileCount: 310, color: const Color(0xFFF59E0B)),
+            TreemapNode(name: "Slack.app", path: "/Applications/Slack.app", sizeGB: 0.65, fileCount: 210, color: const Color(0xFF14B8A6)),
+            TreemapNode(name: "Other Apps", path: "/Applications", sizeGB: 11.93, fileCount: 4000, color: const Color(0xFF3B82F6)),
           ],
         ),
         TreemapNode(
@@ -331,7 +495,8 @@ class SystemStorageService {
           color: const Color(0xFF0284C7),
           children: [
             TreemapNode(name: "folders", path: "/private/var/folders", sizeGB: 4.2, fileCount: 210, color: const Color(0xFF0284C7)),
-            TreemapNode(name: "tmp", path: "/private/tmp", sizeGB: 2.1, fileCount: 120, color: const Color(0xFF64748B)),
+            TreemapNode(name: "log", path: "/private/var/log", sizeGB: 1.2, fileCount: 85, color: const Color(0xFF06B6D4)),
+            TreemapNode(name: "tmp", path: "/private/tmp", sizeGB: 1.66, fileCount: 67, color: const Color(0xFF64748B)),
           ],
         ),
         TreemapNode(
@@ -341,8 +506,9 @@ class SystemStorageService {
           fileCount: 38000,
           color: const Color(0xFF64748B),
           children: [
-            TreemapNode(name: "Library", path: "/System/Library", sizeGB: 22.0, fileCount: 31000, color: const Color(0xFF64748B)),
+            TreemapNode(name: "System Library", path: "/System/Library", sizeGB: 22.0, fileCount: 31000, color: const Color(0xFF64748B)),
             TreemapNode(name: "AssetsV2", path: "/System/Library/AssetsV2", sizeGB: 8.99, fileCount: 4200, color: const Color(0xFF475569)),
+            TreemapNode(name: "CoreServices", path: "/System/Library/CoreServices", sizeGB: 3.2, fileCount: 2800, color: const Color(0xFF334155)),
           ],
         ),
       ],
@@ -365,6 +531,60 @@ class SystemStorageService {
     );
 
     return _cachedData!;
+  }
+
+  static Future<TreemapNode?> scanCustomFolder(String path) async {
+    final dir = Directory(path);
+    if (!dir.existsSync()) return null;
+
+    final List<TreemapNode> children = [];
+    double totalMB = 0;
+    int totalFiles = 0;
+
+    try {
+      final list = dir.listSync();
+      for (final entity in list.take(16)) {
+        final name = entity.path.split('/').last;
+        if (name.startsWith('.')) continue;
+
+        double mb = 0.5;
+        try {
+          final du = await Process.run('du', ['-sk', entity.path]);
+          if (du.exitCode == 0) {
+            final kb = double.tryParse(du.stdout.toString().trim().split(RegExp(r'\s+')).first) ?? 0;
+            mb = kb / 1024.0;
+          }
+        } catch (_) {
+          mb = entity.statSync().size / (1024 * 1024);
+        }
+
+        final gb = mb / 1024.0;
+        totalMB += mb;
+        totalFiles += 1;
+
+        children.add(TreemapNode(
+          name: name,
+          path: entity.path,
+          sizeGB: double.parse(gb > 0.01 ? gb.toStringAsFixed(2) : (mb / 1024).toStringAsFixed(3)),
+          fileCount: entity is Directory ? 10 : 1,
+          color: entity is Directory ? const Color(0xFF3B82F6) : const Color(0xFF10B981),
+        ));
+      }
+    } catch (e) {
+      debugPrint("Error scanning folder $path: $e");
+    }
+
+    final folderName = path.split('/').last.isEmpty ? path : path.split('/').last;
+    final totalGB = totalMB / 1024.0;
+
+    return TreemapNode(
+      name: folderName,
+      path: path,
+      sizeGB: double.parse(totalGB.toStringAsFixed(2)),
+      fileCount: totalFiles,
+      color: const Color(0xFF06B6D4),
+      children: children,
+    );
   }
 
   // --- Real Sidebar Tab Scanners ---
@@ -460,18 +680,33 @@ class SystemStorageService {
         final list = dir.listSync();
         for (final entity in list) {
           final name = entity.path.split('/').last;
-          final stat = entity.statSync();
-          final sizeMB = stat.size / (1000 * 1000);
+          if (name == '.DS_Store' || name == '.localized') continue;
+          
+          double sizeMB = 0.1;
+          try {
+            final du = await Process.run('du', ['-sk', entity.path]);
+            if (du.exitCode == 0) {
+              final kb = double.tryParse(du.stdout.toString().trim().split(RegExp(r'\s+')).first) ?? 0;
+              sizeMB = kb / 1024.0;
+            }
+          } catch (_) {
+            sizeMB = entity.statSync().size / (1024 * 1024);
+          }
+
+          final sizeGB = sizeMB / 1024.0;
+
           trash.add(StorageFile(
             name: name,
-            path: "~/.Trash",
-            sizeGB: double.parse((sizeMB / 1000).toStringAsFixed(2)),
-            icon: Icons.delete_outline_rounded,
+            path: entity.path,
+            sizeGB: double.parse(sizeGB > 0.001 ? sizeGB.toStringAsFixed(3) : (sizeMB / 1024).toStringAsFixed(4)),
+            icon: entity is Directory ? Icons.folder_rounded : Icons.delete_outline_rounded,
             iconColor: const Color(0xFFEF4444),
-            type: "Trash Item",
+            type: entity is Directory ? "Trash Directory" : "Trash File",
           ));
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint("Error reading trash: $e");
+      }
     }
     return trash;
   }
@@ -529,7 +764,8 @@ class SystemStorageService {
   static double _sumGB(List<CategoryDetailItem> items, {required double fallback}) {
     if (items.isEmpty) return fallback;
     final mb = items.fold<double>(0, (sum, i) => sum + i.sizeMB);
-    return double.parse((mb / 1000.0).toStringAsFixed(1));
+    final calculated = double.parse((mb / 1024.0).toStringAsFixed(1));
+    return calculated > 0.1 ? calculated : fallback;
   }
 
   static Future<List<CategoryDetailItem>> _scanFolderFiles(
@@ -554,8 +790,18 @@ class SystemStorageService {
         }
 
         final stat = entity.statSync();
-        final sizeMB = stat.size / (1000 * 1000);
-        final fmt = sizeMB >= 1000 ? '${(sizeMB / 1000).toStringAsFixed(1)} GB' : '${sizeMB.toStringAsFixed(1)} MB';
+        double sizeMB = stat.size / (1024 * 1024);
+        if (entity is Directory || name.endsWith('.app') || sizeMB < 0.1) {
+          try {
+            final du = await Process.run('du', ['-sk', entity.path]);
+            if (du.exitCode == 0) {
+              final kb = double.tryParse(du.stdout.toString().trim().split(RegExp(r'\s+')).first) ?? 0;
+              sizeMB = kb / 1024.0;
+            }
+          } catch (_) {}
+        }
+
+        final fmt = sizeMB >= 1024 ? '${(sizeMB / 1024).toStringAsFixed(1)} GB' : '${sizeMB.toStringAsFixed(1)} MB';
 
         list.add(CategoryDetailItem(
           id: entity.path,

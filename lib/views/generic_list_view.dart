@@ -40,6 +40,13 @@ class _GenericListViewState extends State<GenericListView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? AppTheme.cardBgTranslucent : AppTheme.cardBgLight;
+    final innerCardBg = isDark ? AppTheme.bgDark.withValues(alpha: 0.5) : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
+
     if (_loading || _data == null) {
       return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
     }
@@ -53,18 +60,18 @@ class _GenericListViewState extends State<GenericListView> {
         children: [
           Text(
             widget.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
-              color: AppTheme.textWhite,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             widget.subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppTheme.textSubtle,
+              color: textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -72,9 +79,9 @@ class _GenericListViewState extends State<GenericListView> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.cardBgTranslucent,
+                color: cardBgColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: borderColor),
               ),
               child: ListView.builder(
                 itemCount: files.length,
@@ -84,9 +91,9 @@ class _GenericListViewState extends State<GenericListView> {
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.bgDark.withValues(alpha: 0.5),
+                      color: innerCardBg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.5)),
+                      border: Border.all(color: borderColor.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -105,25 +112,25 @@ class _GenericListViewState extends State<GenericListView> {
                             children: [
                               Text(
                                 file.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textWhite,
+                                  color: textPrimary,
                                 ),
                               ),
                               Text(
                                 file.path,
-                                style: const TextStyle(fontSize: 11, color: AppTheme.textSubtle),
+                                style: TextStyle(fontSize: 11, color: textSecondary),
                               ),
                             ],
                           ),
                         ),
                         Text(
                           file.sizeFormatted,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textWhite,
+                            color: textPrimary,
                           ),
                         ),
                         const SizedBox(width: 14),

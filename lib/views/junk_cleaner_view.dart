@@ -44,6 +44,13 @@ class _JunkCleanerState extends State<JunkCleanerView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? AppTheme.cardBgTranslucent : AppTheme.cardBgLight;
+    final innerCardBg = isDark ? AppTheme.bgDark.withValues(alpha: 0.5) : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
     }
@@ -62,20 +69,20 @@ class _JunkCleanerState extends State<JunkCleanerView> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'System Junk & Cache Cleaner',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textWhite,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Real system caches, logs, & DerivedData • Cleanable Junk: $totalGB GB',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSubtle,
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -105,9 +112,9 @@ class _JunkCleanerState extends State<JunkCleanerView> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.cardBgTranslucent,
+                color: cardBgColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: borderColor),
               ),
               child: ListView.builder(
                 itemCount: _junkItems.length,
@@ -117,16 +124,16 @@ class _JunkCleanerState extends State<JunkCleanerView> {
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppTheme.bgDark.withOpacity(0.5),
+                      color: innerCardBg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.borderColor.withOpacity(0.5)),
+                      border: Border.all(color: borderColor.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppTheme.purpleGlow.withOpacity(0.18),
+                            color: AppTheme.purpleGlow.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.cleaning_services_rounded, color: AppTheme.purpleGlow, size: 22),
@@ -138,32 +145,32 @@ class _JunkCleanerState extends State<JunkCleanerView> {
                             children: [
                               Text(
                                 item.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textWhite,
+                                  color: textPrimary,
                                 ),
                               ),
                               Text(
                                 item.path,
-                                style: const TextStyle(fontSize: 11, color: AppTheme.textSubtle),
+                                style: TextStyle(fontSize: 11, color: textSecondary),
                               ),
                             ],
                           ),
                         ),
                         Text(
                           item.sizeFormatted,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textWhite,
+                            color: textPrimary,
                           ),
                         ),
                         const SizedBox(width: 14),
                         ElevatedButton(
                           onPressed: () => _cleanJunk(item),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.amberGold.withOpacity(0.2),
+                            backgroundColor: AppTheme.amberGold.withValues(alpha: 0.2),
                             foregroundColor: AppTheme.amberGold,
                             elevation: 0,
                           ),

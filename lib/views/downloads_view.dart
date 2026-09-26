@@ -38,6 +38,13 @@ class _DownloadsViewState extends State<DownloadsView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? AppTheme.cardBgTranslucent : AppTheme.cardBgLight;
+    final innerCardBg = isDark ? AppTheme.bgDark.withValues(alpha: 0.5) : AppTheme.bgLight;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.borderColorLight;
+    final textPrimary = isDark ? AppTheme.textWhite : AppTheme.textDark;
+    final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
     }
@@ -52,21 +59,21 @@ class _DownloadsViewState extends State<DownloadsView> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Downloads Folder Analyzer',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textWhite,
+                      color: textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Real downloaded files and archives in ~/Downloads',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSubtle,
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -87,9 +94,9 @@ class _DownloadsViewState extends State<DownloadsView> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.cardBgTranslucent,
+                color: cardBgColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: borderColor),
               ),
               child: ListView.builder(
                 itemCount: _files.length,
@@ -99,16 +106,16 @@ class _DownloadsViewState extends State<DownloadsView> {
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.bgDark.withOpacity(0.5),
+                      color: innerCardBg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.borderColor.withOpacity(0.5)),
+                      border: Border.all(color: borderColor.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: f.iconColor.withOpacity(0.18),
+                            color: f.iconColor.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(f.icon, color: f.iconColor, size: 20),
@@ -120,26 +127,26 @@ class _DownloadsViewState extends State<DownloadsView> {
                             children: [
                               Text(
                                 f.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textWhite,
+                                  color: textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 '${f.path} • ${f.type}',
-                                style: const TextStyle(fontSize: 11, color: AppTheme.textSubtle),
+                                style: TextStyle(fontSize: 11, color: textSecondary),
                               ),
                             ],
                           ),
                         ),
                         Text(
                           '${f.sizeGB} GB',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textWhite,
+                            color: textPrimary,
                           ),
                         ),
                         const SizedBox(width: 14),
