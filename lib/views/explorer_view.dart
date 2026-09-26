@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/system_storage_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/cute_app_loader.dart';
 
 class ExplorerView extends StatefulWidget {
   const ExplorerView({super.key});
@@ -38,7 +39,12 @@ class _ExplorerViewState extends State<ExplorerView> {
   @override
   Widget build(BuildContext context) {
     if (_loading || _data == null) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
+      return const Center(
+        child: CuteAppLoader(
+          message: 'Exploring Macintosh HD...',
+          subMessage: 'Gathering directory & space usage metrics',
+        ),
+      );
     }
 
     return Padding(

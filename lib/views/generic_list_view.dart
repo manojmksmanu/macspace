@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/system_storage_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/cute_app_loader.dart';
 
 class GenericListView extends StatefulWidget {
   final String title;
@@ -48,7 +49,12 @@ class _GenericListViewState extends State<GenericListView> {
     final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
 
     if (_loading || _data == null) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
+      return Center(
+        child: CuteAppLoader(
+          message: 'Loading ${widget.title}...',
+          subMessage: 'Analyzing files and disk space usage',
+        ),
+      );
     }
 
     final files = _data!.categories.firstWhere((c) => c.key == 'large', orElse: () => _data!.categories.first).items;

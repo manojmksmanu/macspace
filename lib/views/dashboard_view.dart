@@ -7,6 +7,7 @@ import '../widgets/category_cards_grid.dart';
 import '../widgets/large_files_table.dart';
 import '../widgets/recommendations_widget.dart';
 import '../widgets/treemap_widget.dart';
+import '../widgets/cute_app_loader.dart';
 
 class DashboardView extends StatefulWidget {
   final ValueChanged<int> onNavigate;
@@ -107,37 +108,10 @@ class _DashboardViewState extends State<DashboardView> {
   Widget build(BuildContext context) {
     if (_isLoading || _storageData == null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(
-              color: AppTheme.cyanGlow,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _scanStatus,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textWhite,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: 260,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: _scanProgress,
-                  minHeight: 6,
-                  backgroundColor: AppTheme.borderColor,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppTheme.cyanGlow,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        child: CuteAppLoader(
+          message: _scanStatus,
+          subMessage: 'Scanning macOS storage structure & files',
+          progress: _scanProgress > 0 ? _scanProgress : null,
         ),
       );
     }
@@ -217,7 +191,7 @@ class _DashboardViewState extends State<DashboardView> {
                         ? const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CuteAppLoader(size: 14, showText: false),
                           )
                         : const Icon(Icons.bolt_rounded, size: 16),
                     label: const Text('Turbo Scan'),

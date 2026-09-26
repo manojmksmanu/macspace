@@ -10,6 +10,8 @@ import 'views/trash_view.dart';
 import 'views/generic_list_view.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  AppTheme.initTheme();
   runApp(const MacStorageAnalyzerApp());
 }
 

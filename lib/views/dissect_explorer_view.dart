@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/system_storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/confirm_delete_modal.dart';
+import '../widgets/cute_app_loader.dart';
 
 class DissectExplorerView extends StatefulWidget {
   const DissectExplorerView({super.key});
@@ -165,7 +166,12 @@ class _DissectExplorerViewState extends State<DissectExplorerView> {
     final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
 
     if (_isLoading || _data == null) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
+      return const Center(
+        child: CuteAppLoader(
+          message: 'Dissecting Disk Structure...',
+          subMessage: 'Generating visual treemap representation',
+        ),
+      );
     }
 
     final d = _data!;

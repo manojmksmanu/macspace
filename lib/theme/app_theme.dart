@@ -1,10 +1,48 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class AppTheme {
   static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.dark);
 
+  static File get _configFile {
+    final home = Platform.environment['HOME'] ?? '';
+    return File('$home/.macspace_config.json');
+  }
+
+  static void initTheme() {
+    try {
+      final file = _configFile;
+      if (file.existsSync()) {
+        final content = file.readAsStringSync();
+        final json = jsonDecode(content);
+        if (json is Map && json.containsKey('theme')) {
+          if (json['theme'] == 'light') {
+            themeModeNotifier.value = ThemeMode.light;
+          } else {
+            themeModeNotifier.value = ThemeMode.dark;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error reading theme config: $e");
+    }
+  }
+
   static void toggleThemeMode() {
-    themeModeNotifier.value = themeModeNotifier.value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    final newMode = themeModeNotifier.value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    themeModeNotifier.value = newMode;
+    _saveThemeMode(newMode);
+  }
+
+  static void _saveThemeMode(ThemeMode mode) {
+    try {
+      final file = _configFile;
+      final data = jsonEncode({'theme': mode == ThemeMode.light ? 'light' : 'dark'});
+      file.writeAsStringSync(data);
+    } catch (e) {
+      debugPrint("Error saving theme config: $e");
+    }
   }
 
   static bool get isDarkMode => themeModeNotifier.value == ThemeMode.dark;

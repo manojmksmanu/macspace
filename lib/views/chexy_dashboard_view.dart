@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/system_storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/category_inspector_modal.dart';
+import '../widgets/cute_app_loader.dart';
 
 class ChexyDashboardView extends StatefulWidget {
   const ChexyDashboardView({super.key});
@@ -95,29 +96,10 @@ class _ChexyDashboardViewState extends State<ChexyDashboardView> {
 
     if (_isLoading || _data == null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(color: AppTheme.cyanGlow),
-            const SizedBox(height: 20),
-            Text(
-              _scanStatus,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: 260,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: _scanProgress,
-                  minHeight: 6,
-                  backgroundColor: borderColor,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
-                ),
-              ),
-            ),
-          ],
+        child: CuteAppLoader(
+          message: _scanStatus,
+          subMessage: 'Analyzing disk space allocation & system files',
+          progress: _scanProgress > 0 ? _scanProgress : null,
         ),
       );
     }
@@ -222,7 +204,7 @@ class _ChexyDashboardViewState extends State<ChexyDashboardView> {
                   IconButton(
                     onPressed: () => _loadData(forceRefresh: true),
                     icon: _isScanning
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryBlue))
+                        ? const SizedBox(width: 16, height: 16, child: CuteAppLoader(size: 16, showText: false))
                         : const Icon(Icons.refresh_rounded, size: 20),
                     tooltip: 'Rescan Macintosh HD',
                     color: textSecondary,
@@ -411,8 +393,8 @@ class _ChexyDashboardViewState extends State<ChexyDashboardView> {
                                 final cat = d.categories[index];
                                 final pct = (cat.sizeGB / d.totalGB * 100).clamp(0.1, 100.0);
                                 return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12.0),
-                                  child: _buildRealCategoryBar(cat.title, pct / 100, cat.sizeGB, cat.color, textPrimary, textSecondary),
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: _buildRealCategoryBar(cat, pct / 100, textPrimary, textSecondary),
                                 );
                               },
                             ),
@@ -632,7 +614,7 @@ class _ChexyDashboardViewState extends State<ChexyDashboardView> {
                                       textPrimary: textPrimary,
                                       textSecondary: textSecondary,
                                       borderColor: borderColor,
-                                      onInspect: () => _openCategory(item.categoryKey),
+                                      onInspect: () => _openCategory(item.categoryKey, targetItem: item),
                                     ),
                                   );
                                 },
@@ -651,10 +633,33 @@ class _ChexyDashboardViewState extends State<ChexyDashboardView> {
     );
   }
 
-  void _openCategory(String key) {
+  void _openCategory(String key, {CategoryDetailItem? targetItem}) {
     if (_data == null) return;
-    final cat = _data!.categories.firstWhere((c) => c.key == key, orElse: () => _data!.categories.first);
-    CategoryInspectorModal.show(context: context, categoryInfo: cat);
+    final cat = _data!.categories.firstWhere(
+      (c) => c.key == key,
+      orElse: () => _data!.categories.firstWhere(
+        (c) => c.key == 'macos_system',
+        orElse: () => _data!.categories.first,
+      ),
+    );
+
+    if (targetItem != null &&
+        (Directory(targetItem.path).existsSync() ||
+            targetItem.path.startsWith('/System') ||
+            targetItem.path.startsWith('/Users') ||
+            targetItem.path.startsWith('~'))) {
+      CategoryInspectorModal.show(
+        context: context,
+        categoryInfo: cat,
+        initialFolderPath: targetItem.path,
+        initialFolderName: targetItem.name,
+      );
+    } else {
+      CategoryInspectorModal.show(
+        context: context,
+        categoryInfo: cat,
+      );
+    }
   }
 
   Widget _buildRealMetricCard({
@@ -785,28 +790,54 @@ class _ChexyDashboardViewState extends State<ChexyDashboardView> {
     );
   }
 
-  Widget _buildRealCategoryBar(String title, double pct, double sizeGB, Color color, Color textPrimary, Color textSecondary) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildRealCategoryBar(CategoryCardInfo cat, double pct, Color textPrimary, Color textSecondary) {
+    return InkWell(
+      onTap: () => _openCategory(cat.key),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary)),
-            Text('${sizeGB.toStringAsFixed(1)} GB', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(cat.icon, size: 14, color: cat.color),
+                    const SizedBox(width: 6),
+                    Text(cat.title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary)),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Text('${cat.sizeGB.toStringAsFixed(1)} GB', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: cat.color)),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text('Inspect >', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: pct,
+                minHeight: 6,
+                backgroundColor: cat.color.withValues(alpha: 0.15),
+                valueColor: AlwaysStoppedAnimation<Color>(cat.color),
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: pct,
-            minHeight: 6,
-            backgroundColor: color.withValues(alpha: 0.15),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-          ),
-        ),
-      ],
+      ),
     );
   }
 

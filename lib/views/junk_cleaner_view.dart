@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/storage_item.dart';
 import '../services/system_storage_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/cute_app_loader.dart';
 
 class JunkCleanerView extends StatefulWidget {
   const JunkCleanerView({super.key});
@@ -52,7 +53,12 @@ class _JunkCleanerState extends State<JunkCleanerView> {
     final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
+      return const Center(
+        child: CuteAppLoader(
+          message: 'Scanning System Caches...',
+          subMessage: 'Identifying cleanable temporary files & logs',
+        ),
+      );
     }
 
     final totalMB = _junkItems.fold<double>(0, (sum, i) => sum + i.sizeMB);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/storage_item.dart';
 import '../services/system_storage_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/cute_app_loader.dart';
 
 class DownloadsView extends StatefulWidget {
   const DownloadsView({super.key});
@@ -46,7 +47,12 @@ class _DownloadsViewState extends State<DownloadsView> {
     final textSecondary = isDark ? AppTheme.textSubtle : AppTheme.textMutedLight;
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.cyanGlow));
+      return const Center(
+        child: CuteAppLoader(
+          message: 'Scanning Downloads...',
+          subMessage: 'Searching recent downloads & installer images',
+        ),
+      );
     }
 
     return Padding(
