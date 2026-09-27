@@ -5,6 +5,7 @@ import 'views/chexy_dashboard_view.dart';
 import 'views/dissect_explorer_view.dart';
 import 'views/apps_manager_view.dart';
 import 'views/junk_cleaner_view.dart';
+import 'views/developer_space_view.dart';
 import 'views/downloads_view.dart';
 import 'views/trash_view.dart';
 import 'views/generic_list_view.dart';
@@ -69,16 +70,18 @@ class _MainLayoutState extends State<MainLayout> {
       case 5:
         return const AppsManagerView();
       case 6:
-        return const DownloadsView();
+        return const DeveloperSpaceView(); // PAGE 7: Developer Space & Junk Cleaner
       case 7:
+        return const DownloadsView();
+      case 8:
         return const GenericListView(
           title: 'Media Analyzer',
           subtitle: 'Real video files, photo libraries, audio tracks, and recordings',
           icon: Icons.music_note_rounded,
         );
-      case 8:
-        return const TrashView();
       case 9:
+        return const TrashView();
+      case 10:
         return const GenericListView(
           title: 'App Settings & Preferences',
           subtitle: 'Scan depth configuration, auto-clean rules, and system notifications',

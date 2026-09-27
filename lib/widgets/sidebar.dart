@@ -25,6 +25,7 @@ class Sidebar extends StatelessWidget {
     SidebarItemData(title: 'Duplicates Finder', icon: Icons.copy_rounded),
     SidebarItemData(title: 'Junk Cleaner', icon: Icons.auto_awesome_rounded),
     SidebarItemData(title: 'Apps Manager', icon: Icons.apps_rounded),
+    SidebarItemData(title: 'Developer Space 🛠️', icon: Icons.developer_board_rounded),
     SidebarItemData(title: 'Downloads', icon: Icons.download_rounded),
     SidebarItemData(title: 'Media Analyzer', icon: Icons.music_note_rounded),
     SidebarItemData(title: 'Trash Bin', icon: Icons.delete_outline_rounded),

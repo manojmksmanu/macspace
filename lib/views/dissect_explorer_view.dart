@@ -583,18 +583,32 @@ class _DissectExplorerViewState extends State<DissectExplorerView> {
             final double width = constraints.maxWidth;
             final double height = constraints.maxHeight;
 
-            // Only render sub-children if currentLevel < 1 and there is ample room (width >= 75px, height >= 60px)
-            final bool renderSubChildren = currentLevel < 1 && filteredChildren.isNotEmpty && width >= 75 && height >= 60;
+            // Render sub-children if currentLevel < 2 and there is room (width >= 40px, height >= 35px)
+            final bool renderSubChildren = currentLevel < 2 && filteredChildren.isNotEmpty && width >= 40 && height >= 35;
 
             Widget childContent;
             if (renderSubChildren) {
-              childContent = Column(
-                children: filteredChildren.map((c) {
-                  return Expanded(
-                    flex: (c.sizeGB * 10).toInt().clamp(5, 100),
-                    child: _buildTreemapBox(c, currentLevel: currentLevel + 1),
-                  );
-                }).toList(),
+              childContent = Container(
+                margin: const EdgeInsets.only(top: 2),
+                child: currentLevel % 2 == 0
+                    ? Column(
+                        children: filteredChildren.map((c) {
+                          final flexVal = (c.sizeGB * 10).toInt().clamp(5, 100);
+                          return Expanded(
+                            flex: flexVal,
+                            child: _buildTreemapBox(c, currentLevel: currentLevel + 1),
+                          );
+                        }).toList(),
+                      )
+                    : Row(
+                        children: filteredChildren.map((c) {
+                          final flexVal = (c.sizeGB * 10).toInt().clamp(5, 100);
+                          return Expanded(
+                            flex: flexVal,
+                            child: _buildTreemapBox(c, currentLevel: currentLevel + 1),
+                          );
+                        }).toList(),
+                      ),
               );
             } else {
               childContent = const SizedBox.shrink();
