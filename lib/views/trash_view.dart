@@ -6,6 +6,7 @@ import '../services/user_preferences_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/confirm_delete_modal.dart';
 import '../widgets/cute_app_loader.dart';
+import '../widgets/deletion_loading_modal.dart';
 import '../widgets/image_preview_modal.dart';
 
 class TrashView extends StatefulWidget {
@@ -96,17 +97,63 @@ class _TrashViewState extends State<TrashView> {
   }
 
   void _emptyTrash() async {
-    try {
-      await Process.run('osascript', ['-e', 'tell application "Finder" to empty trash without warnings']);
-    } catch (_) {
-      final home = Platform.environment['HOME'] ?? '';
-      await Process.run('rm', ['-rf', '$home/.Trash/*']);
-    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever_rounded, color: AppTheme.coralRose, size: 24),
+            SizedBox(width: 10),
+            Text('Empty macOS Trash Bin?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to permanently empty all items in your macOS Trash? This action cannot be undone.',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_forever_rounded, size: 16),
+            label: const Text('Empty Trash'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.coralRose,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    await DeletionLoadingModal.show(
+      context: context,
+      title: 'Emptying macOS Trash Bin...',
+      subTitle: 'Permanently removing all trashed files & folders...',
+      onDeleteTask: () async {
+        try {
+          await Process.run('osascript', ['-e', 'tell application "Finder" to empty trash without warnings']);
+        } catch (_) {
+          final home = Platform.environment['HOME'] ?? '';
+          await Process.run('rm', ['-rf', '$home/.Trash/*']);
+        }
+        return true;
+      },
+    );
+
     await _load();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('macOS Trash bin emptied!'),
+          content: Text('macOS Trash bin emptied successfully!'),
           backgroundColor: AppTheme.emeraldGreen,
         ),
       );
@@ -145,7 +192,7 @@ class _TrashViewState extends State<TrashView> {
       itemName: '${itemsToDelete.length} Selected Trash Items',
       itemPath: '~/.Trash',
       itemSize: formattedSize,
-      onMoveToTrash: () {},
+      onMoveToTrash: null,
       onConfirmPermanentDelete: () async {
         int count = 0;
         for (final item in itemsToDelete) {
@@ -287,14 +334,16 @@ class _TrashViewState extends State<TrashView> {
           itemName: item.name,
           itemPath: expandedPath,
           itemSize: formattedSize,
-          onMoveToTrash: () => SystemStorageService.deletePermanently(expandedPath),
-          onConfirmPermanentDelete: () {
-            SystemStorageService.deletePermanently(expandedPath);
-            setState(() {
-              _allTrashItems.remove(item);
-              _applySearchFilter();
-              _selectedItems.remove(item);
-            });
+          onMoveToTrash: null,
+          onConfirmPermanentDelete: () async {
+            final ok = await SystemStorageService.deletePermanently(expandedPath);
+            if (ok && mounted) {
+              setState(() {
+                _allTrashItems.remove(item);
+                _applySearchFilter();
+                _selectedItems.remove(item);
+              });
+            }
           },
         );
         break;

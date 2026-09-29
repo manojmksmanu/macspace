@@ -1,20 +1,22 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'deletion_loading_modal.dart';
 
 class ConfirmDeleteModal extends StatelessWidget {
   final String itemName;
   final String itemPath;
   final String itemSize;
-  final VoidCallback onConfirmPermanentDelete;
-  final VoidCallback onMoveToTrash;
+  final FutureOr<void> Function()? onConfirmPermanentDelete;
+  final FutureOr<void> Function()? onMoveToTrash;
 
   const ConfirmDeleteModal({
     super.key,
     required this.itemName,
     required this.itemPath,
     required this.itemSize,
-    required this.onConfirmPermanentDelete,
-    required this.onMoveToTrash,
+    this.onConfirmPermanentDelete,
+    this.onMoveToTrash,
   });
 
   static Future<void> show({
@@ -22,8 +24,8 @@ class ConfirmDeleteModal extends StatelessWidget {
     required String itemName,
     required String itemPath,
     required String itemSize,
-    required VoidCallback onConfirmPermanentDelete,
-    required VoidCallback onMoveToTrash,
+    FutureOr<void> Function()? onConfirmPermanentDelete,
+    FutureOr<void> Function()? onMoveToTrash,
   }) {
     return showDialog(
       context: context,
@@ -81,7 +83,7 @@ class ConfirmDeleteModal extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Permanent Delete Warning',
+                        'Confirm Delete Action',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -90,7 +92,7 @@ class ConfirmDeleteModal extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        'This action cannot be undone!',
+                        'Target item and disk space:',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -104,7 +106,7 @@ class ConfirmDeleteModal extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              'Are you sure you want to permanently delete this file from your Mac? It will be erased completely without moving to Trash.',
+              'Choose whether to move this item to Trash or permanently erase it from disk.',
               style: TextStyle(
                 fontSize: 13,
                 color: textSecondary,
@@ -178,39 +180,58 @@ class ConfirmDeleteModal extends StatelessWidget {
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onMoveToTrash();
-                  },
-                  icon: const Icon(Icons.delete_outline_rounded, size: 15),
-                  label: const Text('Move to Trash'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                if (onMoveToTrash != null) ...[
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await DeletionLoadingModal.show(
+                        context: context,
+                        title: 'Moving to Trash...',
+                        subTitle: 'Moving $itemName ($itemSize) to Trash...',
+                        onDeleteTask: () async {
+                          await Future.sync(() => onMoveToTrash?.call());
+                          return true;
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete_outline_rounded, size: 15),
+                    label: const Text('Move to Trash'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onConfirmPermanentDelete();
-                  },
-                  icon: const Icon(Icons.delete_forever_rounded, size: 15),
-                  label: const Text('Delete Permanently'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.coralRose,
-                    foregroundColor: Colors.white,
-                    elevation: 2,
-                    shadowColor: AppTheme.coralRose.withValues(alpha: 0.4),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  const SizedBox(width: 8),
+                ],
+                if (onConfirmPermanentDelete != null)
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await DeletionLoadingModal.show(
+                        context: context,
+                        title: 'Deleting Permanently...',
+                        subTitle: 'Erasing $itemName ($itemSize) from disk...',
+                        onDeleteTask: () async {
+                          await Future.sync(() => onConfirmPermanentDelete?.call());
+                          return true;
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete_forever_rounded, size: 15),
+                    label: const Text('Delete Permanently'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.coralRose,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shadowColor: AppTheme.coralRose.withValues(alpha: 0.4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
                   ),
-                ),
               ],
             ),
           ],
